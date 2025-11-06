@@ -25,27 +25,36 @@ node {
     }
 
     stage('backend tests') {
-      try {
-        // Opción A (más simple): solo unit tests -> NO dispara failsafe ni Testcontainers
-        sh "./mvnw -ntp test -P-webapp"
+  try {
+    // Solo unit tests: no empaqueta ni corre ITs
+    sh "./mvnw -ntp test -P-webapp"
+  } finally {
+    junit allowEmptyResults: true,
+          testResults: '**/target/surefire-reports/*.xml, **/target/failsafe-reports/*.xml'
+    // Quita el archiveArtifacts de acá (todavía no existe el jar)
+  }
+}
 
-        // Opción B (si querés 'verify' pero sin ITs):
-        // sh "./mvnw -ntp verify -P-webapp -DskipITs -Dspring.testcontainers.enabled=false"
-      } finally {
-        junit allowEmptyResults: true,
-              testResults: '**/target/surefire-reports/*.xml, **/target/failsafe-reports/*.xml'
-        archiveArtifacts allowEmptyArchive: true, artifacts: '**/target/*.jar'
-      }
-    }
+stage('packaging') {
+  // Empaqueta sin tests (ya corrimos los unit tests antes)
+  sh "./mvnw -ntp verify -P-webapp -Pprod -DskipTests"
+  archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true, allowEmptyArchive: false
+}
 
-    stage('frontend tests') {
-      try {
-        sh "npm install"
-        // sh "npm test"
-      } finally {
-        junit allowEmptyResults: true, testResults: '**/target/test-results/TESTS-results-jest.xml'
-      }
-    }
+stage('frontend tests') {
+  try {
+    // Instalar dependencias con el plugin (equivale a "npm ci" o "npm install")
+    sh "./mvnw -ntp com.github.eirslett:frontend-maven-plugin:npm -Dfrontend.npm.arguments='ci --no-audit --no-fund'"
+
+    // Si tenés tests en package.json ("test"), ejecutalos así:
+    // sh "./mvnw -ntp com.github.eirslett:frontend-maven-plugin:npm -Dfrontend.npm.arguments='test -- --ci'"
+
+  } finally {
+    // Si querés reportes JUnit de frontend, configurá jest-junit y apuntá al XML correcto.
+    junit allowEmptyResults: true, testResults: '**/target/test-results/TESTS-results-jest.xml'
+  }
+}
+
 
     stage('packaging') {
       // ya estás saltando tests aquí, así que no ejecuta ITs
