@@ -82,11 +82,11 @@ jhipster:
   mail: # specific JHipster mail property, for standard properties see MailProperties
     base-url: http://127.0.0.1:8080
   logging:
-    use-json-format: false # By default, logs are not in Json format
-    logstash: # Forward logs to logstash over a socket, used by LoggingConfiguration
-      enabled: false
-      host: localhost
-      port: 5000
+    use-json-format: true # <— en JSON para que Logstash lo parsee fácil
+    logstash:
+      enabled: true # <— activar envío a Logstash
+      host: localhost # <— tu Logstash publicado por Docker
+      port: 50000 # <— PUERTO por defecto en docker-elk (TCP)
       ring-buffer-size: 512
 # ===================================================================
 # Application specific properties

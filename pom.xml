@@ -22,6 +22,7 @@
             Build properties
             The spring-boot version should match the one managed by https://mvnrepository.com/artifact/tech.jhipster/jhipster-dependencies/${jhipster-dependencies.version}
         -->
+        <logstash-logback-encoder.version>7.4</logstash-logback-encoder.version>
         <maven.version>3.2.5</maven.version>
         <java.version>17</java.version>
         <node.version>v22.15.0</node.version>
@@ -82,6 +83,11 @@
     </properties>
 
     <dependencies>
+    <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>${logstash-logback-encoder.version}</version>
+        </dependency>
         <dependency>
             <groupId>tech.jhipster</groupId>
             <artifactId>jhipster-framework</artifactId>
@@ -632,7 +638,15 @@
                             </platforms>
                         </from>
                         <to>
-                            <image>myapplication:latest</image>
+                            <image>emilianitooooo/tpjenkins:latest</image>
+                            <tags>
+                             <tag>${project.version}</tag>
+                             <tag>latest</tag>
+                            </tags>
+                            <auth>
+                              <username>${DOCKER_REGISTRY_USER}</username>
+                              <password>${DOCKER_REGISTRY_PWD}</password>
+                            </auth>
                         </to>
                         <container>
                             <entrypoint>
